@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 import os
 from pathlib import Path
 
+from kombu.utils.url import safequote
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -29,14 +31,12 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 # Celery settings
-CELERY_BROKER_URL = "sqs://"
+AWS_SQS_ACCESS_KEY_ID = safequote(os.environ.get("AWS_SQS_ACCESS_KEY_ID"))
+AWS_SQS_SECRET_ACCESS_KEY = safequote(os.environ.get("AWS_SQS_SECRET_ACCESS_KEY"))
+CELERY_BROKER_URL = f"sqs://{AWS_SQS_ACCESS_KEY_ID}:{AWS_SQS_SECRET_ACCESS_KEY}@"
 
 CELERY_BROKER_TRANSPORT_OPTIONS = {
-    "region": "ap-northeast-2",
-    "visibility_timeout": 3600,
-    "polling_interval": 10,
-    "queue_name_prefix": "%s-" % {True: "dev", False: "production"}[DEBUG],
-    "CELERYD_PREFETCH_MULTIPLIER": 0,
+    "region": os.environ.get("AWS_SQS_REGION"),
 }
 
 
@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "csv_read",
 ]
 
 MIDDLEWARE = [
